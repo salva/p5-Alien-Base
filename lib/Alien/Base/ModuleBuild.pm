@@ -323,6 +323,15 @@ sub process_share_dir_files {
   $self->depends_on('alien_install') if $self->notes('alien_blib_scheme') || $self->alien_stage_install;
 }
 
+sub extract_archive {
+  my ($self, $archive) = @_;
+  print "Extracting Archive ... ";
+  my $ae = Archive::Extract->new( archive => $archive );
+  $ae->extract or croak "Archive extraction failed!";
+  print "Done\n";
+  return _catdir($ae->extract_path);
+}
+
 sub ACTION_alien_code {
   my $self = shift;
   local $| = 1; # don't buffer stdout
@@ -374,12 +383,8 @@ sub ACTION_alien_code {
     croak "Error downloading file" unless $filename;
     print "Done\n";
 
-    print "Extracting Archive ... ";
-    my $ae = Archive::Extract->new( archive => $filename );
-    $ae->extract;
-    print "Done\n";
+    my $extract_path = $self->extract_archive($filename);
 
-    my $extract_path = _catdir($ae->extract_path);
     $self->config_data( working_directory => $extract_path );
     $CWD = $extract_path;
 
