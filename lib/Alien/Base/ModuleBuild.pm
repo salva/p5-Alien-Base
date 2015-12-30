@@ -374,14 +374,27 @@ sub ACTION_alien_code {
     croak "Error downloading file" unless $filename;
     print "Done\n";
 
-    print "Extracting Archive ... ";
-    my $ae = Archive::Extract->new( archive => $filename );
-    $ae->extract;
-    print "Done\n";
+    do {
+        my %programs = %$Archive::Extract::PROGRAMS;
+        if ($^O =~ /MSWin32/ and $self->config_data('msys')) {
+            $self->_alien_bin_require('Alien::MSYS');
+            my $msys_path = Alien::MSYS->msys_path;
+            for my $name (keys %programs) {
+                my $exe = File::Spec->catfile($msys_path, "$name.exe");
+                $programs{$name} = $exe if -f $exe;
+            }
+        }
+        local $Archive::Extract::PROGRAMS = \%programs;
 
-    my $extract_path = _catdir($ae->extract_path);
-    $self->config_data( working_directory => $extract_path );
-    $CWD = $extract_path;
+        print "Extracting Archive ... ";
+        my $ae = Archive::Extract->new( archive => $filename );
+        $ae->extract;
+        print "Done\n";
+
+        my $extract_path = _catdir($ae->extract_path);
+        $self->config_data( working_directory => $extract_path );
+        $CWD = $extract_path;
+    };
 
     if ( $file->platform eq 'src' ) {
       print "Building library ... ";
