@@ -772,6 +772,7 @@ sub alien_do_system {
   {
     my $value = $self->alien_interpolate($self->alien_env->{$key});
     $ENV{$key} = $value;
+    $config ||= _shell_config_generate();
     $config->set( $key => $value );
   }
 
