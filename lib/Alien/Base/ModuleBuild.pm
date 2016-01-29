@@ -145,6 +145,8 @@ __PACKAGE__->add_property( 'alien_helper' => {} );
 
 __PACKAGE__->add_property( 'alien_env' => {} );
 
+__PACKAGE__->add_property( 'alien_env_fixpath' => [] );
+
 ################
 #  ConfigData  #
 ################
@@ -774,6 +776,12 @@ sub alien_do_system {
     $ENV{$key} = $value;
     $config ||= _shell_config_generate();
     $config->set( $key => $value );
+  }
+
+  if ($self->config_data('msys')) {
+    foreach my $key (@{ $self->alien_env_fixpath }) {
+      $ENV{$key} =~ s|\\|/|g if defined $ENV{$key};
+    }
   }
 
   if($config) {  
